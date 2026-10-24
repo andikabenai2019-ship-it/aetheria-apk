@@ -1,4 +1,4 @@
-name: Build AETHERIA // RW-14 Universal APK (v27.5)
+name: Build AETHERIA // RW-14 Official APK (Auto-Version)
 
 on:
   push:
@@ -31,14 +31,18 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Run Unit Tests & Build APK
+      - name: Run Unit Tests & Build Latest APK
+        id: build_apk
         working-directory: ./android-app
         run: |
+          VER=$(grep 'val currentApkVersionName =' app/build.gradle.kts | head -n 1 | cut -d'"' -f2)
+          if [ -z "$VER" ]; then VER="28.5.0-3D-HD"; fi
+          echo "version=$VER" >> $GITHUB_OUTPUT
           gradle testDebugUnitTest assembleDebug --no-daemon --stacktrace
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AETHERIA-RW14-Quantum-v27.5-Universal.apk
+          cp app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/AETHERIA-RW14-v${VER}.apk"
 
-      - name: Upload AETHERIA Universal APK Artifact
+      - name: Upload AETHERIA Latest APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AETHERIA-RW14-Quantum-v27.5-Universal-APK
-          path: android-app/app/build/outputs/apk/debug/AETHERIA-RW14-Quantum-v27.5-Universal.apk
+          name: AETHERIA-RW14-v${{ steps.build_apk.outputs.version }}-APK
+          path: android-app/app/build/outputs/apk/debug/AETHERIA-RW14-v${{ steps.build_apk.outputs.version }}.apk
